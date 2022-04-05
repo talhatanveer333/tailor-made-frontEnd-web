@@ -7,11 +7,16 @@ import authContext from "../auth/authContext";
 
 function Login() {
   const { user, setUser } = useContext(authContext);
+  const [account, setAccount] = useState({
+    email: "",
+    password: "",
+  });
   const navigate = useNavigate();
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const result = await login("talha@gmail.com", "12345678");
+      const result = await login(account.email, account.password);
       if (!result) return;
       // else successful auth
       const decodedUser = await jwtDecode(result.data);
@@ -22,7 +27,11 @@ function Login() {
       console.error(e);
     }
   };
-
+  const handleChange = ({ currentTarget }) => {
+    const acc = { ...account };
+    acc[currentTarget.name] = currentTarget.value;
+    setAccount(acc);
+  };
   return (
     <div className="h-full bg-gradient-to-tl from-green-400 to-indigo-900 w-full py-36 px-4">
       <div className="flex flex-col items-center justify-center">
@@ -62,6 +71,9 @@ function Login() {
                 Email
               </lable>
               <input
+                name="email"
+                value={account.email}
+                onChange={handleChange}
                 autoFocus
                 aria-label="enter email adress"
                 role="input"
@@ -75,6 +87,9 @@ function Login() {
               </lable>
               <div className="relative flex items-center justify-center">
                 <input
+                  name="password"
+                  value={account.password}
+                  onChange={handleChange}
                   aria-label="enter Password"
                   role="input"
                   type="password"
