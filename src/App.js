@@ -1,66 +1,67 @@
-import { useEffect, useState } from "react";
-import { Route, Routes, Navigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Routes, Route, useNavigate } from "react-router-dom";
+import { AnimatePresence } from "framer-motion";
+import { getUser } from "./auth/authStorage";
 
 import authContext from "./auth/authContext";
-import MasterLayout from "./components/MasterLayout";
+import LoginScreen from "./screens/Login";
 import NotFoundPage from "./screens/NotFoundPage";
-import Login from "./screens/Login";
-import RegisterNewStudent from "./screens/RegisterNewStudent";
-import StudentTable from "./components/StudentsTable";
-import StudentInfo from "./screens/StudentInfo";
-import AttendancePage from "./screens/AttedancePage";
-import WelcomeAttendancePage from "./screens/WelcomeAttendancePage";
-import RegisterUser from "./screens/RegisterUser";
-import { getStudents } from "./services/students";
+import OrderViewScreen from "./screens/OrderViewScreen";
+import AllOrdersScreen from "./screens/AllOrdersScreen";
+import AllOrdersForAdminScreen from "./screens/AllOrdersForAdminScreen";
 
 function App() {
-  // this module should have all the data and pass to other components accordingly
+  const navigate = useNavigate();
   const [user, setUser] = useState();
-  const [students, setStudents] = useState([]);
-  const [selectedStudentForInfoPage, setSelectedStudentForInfoPage] = useState(
-    {}
-  );
+  const [loading, setLoading] = useState(false);
+
+  const getUserFromStorage = async () => {
+    setLoading(true);
+    //console.log("loading true");
+    const result = await getUser();
+    setUser(result);
+    //console.log(result);
+    setLoading(false);
+    //console.log("loading false");
+  };
   useEffect(() => {
-    loadStudents();
-    //console.log(`user from app.js : ${user.name}`);
-  });
-  const loadStudents = async () => {
-    const result = await getStudents();
-    setStudents(result);
-  };
-  const handleSelectStudent = (student) => {
-    setSelectedStudentForInfoPage(student);
-  };
+    getUserFromStorage();
+  }, []);
+  if (loading)
+    return (
+      <div>
+        <p>loading...</p>
+      </div>
+    );
   return (
-    <>
-      <authContext.Provider value={{ user, setUser }}>
+    <authContext.Provider value={{ user, setUser }}>
+      <AnimatePresence>
         <Routes>
-          <Route
-            path="/"
-            exact
-            element={user ? <StudentTable /> : <Navigate to="/login" />}
-          />
-          <Route path="/login" exact element={<Login />} />
+          {user ? (
+            <>
+              {user.type === "admin" ? (
+                <>
+                  <Route path="/" element={<AllOrdersForAdminScreen />} />
+                </>
+              ) : (
+                <>
+                  <Route path="/" element={<OrderViewScreen />} />
+                  <Route path="/allOrders" element={<AllOrdersScreen />} />
+                  <Route path="/login" element={<LoginScreen />} />
+                </>
+              )}
 
-          <Route
-            path="/attedance"
-            exact
-            element={
-              <AttendancePage
-                student={{
-                  isMessAllowed: true,
-                  name: "Talha",
-                  rollNmber: "17F-8161",
-                }}
-              />
-            }
-          />
-
-          <Route path="*" element={<NotFoundPage />} />
-          <Route path="/register" element={<RegisterUser />} />
+              <Route path="*" element={<NotFoundPage />} />
+            </>
+          ) : (
+            <>
+              <Route path="/login" element={<LoginScreen />} />
+              <Route path="*" element={<LoginScreen />} />
+            </>
+          )}
         </Routes>
-      </authContext.Provider>
-    </>
+      </AnimatePresence>
+    </authContext.Provider>
   );
 }
 

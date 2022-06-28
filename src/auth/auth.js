@@ -2,7 +2,16 @@ import apiObject from "../services/apiObject";
 
 const endpoint = "/auth";
 
-const login = (email, password) =>
-  apiObject.post(endpoint, { email, password });
+async function login(email, password) {
+  try {
+    const result = await apiObject.post(endpoint + "/webPortal", {
+      email,
+      password,
+    });
+    return result;
+  } catch (e) {
+    console.error(e);
+  }
+}
 
 export { login };
